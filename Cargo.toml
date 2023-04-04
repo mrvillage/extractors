@@ -8,5 +8,4 @@ repository = "https://github.com/mrvillage/extractors"
 documentation = "https://docs.rs/extractors"
 readme = "README.md"
 
-
 [dependencies]
