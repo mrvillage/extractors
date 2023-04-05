@@ -1,6 +1,6 @@
 use std::{error::Error, future::Future, pin::Pin};
 
-use crate::{caller::Caller, provide::Provide};
+use crate::{caller::Caller, extract::Extract};
 
 macro_rules! tuple {
     ($($param:ident)*) => {
@@ -8,7 +8,7 @@ macro_rules! tuple {
         where
             Func: Fn($($param),*) -> Fut + Clone + 'static,
             Fut: Future,
-            Pro: $(Provide<$param, Err> +)*,
+            Pro: $(Extract<$param, Err> +)*,
             Err: Error,
         {
             type Output = Fut::Output;
@@ -21,17 +21,17 @@ macro_rules! tuple {
             }
         }
 
-        impl<Pro, Err, $($param,)*> Provide<($($param,)*), Err> for Pro
+        impl<Pro, Err, $($param,)*> Extract<($($param,)*), Err> for Pro
         where
-            Pro: $(Provide<$param, Err> +)*,
+            Pro: $(Extract<$param, Err> +)*,
             Err: Error,
         {
             #[inline]
             #[allow(non_snake_case)]
-            fn provide<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<($($param,)*), Err>> + 'a>> {
+            fn extract<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<($($param,)*), Err>> + 'a>> {
                 let fut = async move {
                     $(
-                        let $param = <Pro as Provide<$param, Err>>::provide(self).await?;
+                        let $param = <Pro as Extract<$param, Err>>::extract(self).await?;
                     )*
                     Ok(($($param,)*))
                 };
